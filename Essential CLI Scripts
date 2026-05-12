@@ -1,7 +1,95 @@
+#############################################################################################
+Lightweight Maintenance Script (The Original)
+#############################################################################################
+
+#!/bin/bash
+
+# Lightweight Code-Only Backup Script
+# Perfect for Theme/Plugin development snapshots
+
+BACKUP_DIR="/var/backups/wpsites"
+mkdir -p "$BACKUP_DIR"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+echo "Starting LIGHT backups at $(date)"
+
+for site in */; do
+    if [ -f "${site}wp-config.php" ]; then
+        SITE_NAME=$(basename "$site")
+        echo "Backing up CODE: $SITE_NAME"
+        
+        cd "$site" || continue
+        mkdir -p "$BACKUP_DIR/$SITE_NAME"
+        
+        # Backup Database
+        wp db export "$BACKUP_DIR/$SITE_NAME/${SITE_NAME}_${DATE}-db.sql" --allow-root
+        
+        # Backup Files (Excluding media and configs for agility)
+        tar -czf "$BACKUP_DIR/$SITE_NAME/${SITE_NAME}_${DATE}-code-only.tar.gz" . \
+            --exclude=./wp-content/cache \
+            --exclude=./wp-content/uploads \
+            --exclude=./wp-config.php
+        
+        cd ..
+        
+        # Rotation
+        find "$BACKUP_DIR/$SITE_NAME" -type f -mtime +7 -delete
+    fi
+done
+
+echo "Lightweight backups completed."
+
+
+#############################################################################################
+Full Disaster Recovery Script
+#############################################################################################
+
+#!/bin/bash
+
+# Full WordPress Backup Script (Files + DB + Config)
+# Rotation: 7-day automatic cleanup
+
+BACKUP_DIR="/var/backups/wpsites"
+mkdir -p "$BACKUP_DIR"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+echo "Starting FULL backups at $(date)"
+
+for site in */; do
+    if [ -f "${site}wp-config.php" ]; then
+        SITE_NAME=$(basename "$site")
+        echo "Backing up FULL: $SITE_NAME"
+        
+        cd "$site" || continue
+        
+        # Ensure site-specific backup directory exists
+        mkdir -p "$BACKUP_DIR/$SITE_NAME"
+        
+        # 1. Backup Database via WP-CLI
+        wp db export "$BACKUP_DIR/$SITE_NAME/${SITE_NAME}_${DATE}-db.sql" --allow-root
+        
+        # 2. Backup ALL Files (Includes uploads and wp-config)
+        # Excluding only the cache to save space
+        tar -czf "$BACKUP_DIR/$SITE_NAME/${SITE_NAME}_${DATE}-FULL-RECOVERY.tar.gz" . \
+            --exclude=./wp-content/cache \
+            --exclude=./*.tar.gz \
+            --exclude=./*.zip
+        
+        cd ..
+        
+        #3.Automatic Rotation: Delete files older than 7 days
+        find "$BACKUP_DIR/$SITE_NAME" -type f -mtime +7 -delete
+    fi
+done
+
+echo "Full backups completed and rotated."
+
+
 
 #############################################################################################
 Download and instal WordPress onto server
 #############################################################################################
+
 
 #!/bin/bash
 
@@ -20,11 +108,11 @@ sudo chmod +x /usr/local/bin/wp
 echo "WP-CLI installation complete. Run 'wp --info' to verify."
 
 
-
-
 #############################################################################################
 Essentials CLI Script
 #############################################################################################
+
+
 !/bin/bash
 
 # Install essential plugins
@@ -41,4 +129,12 @@ for PLUGIN in "${PLUGINS[@]}"; do
 done
 
 echo "All essential plugins installed and activated!"
+
+
 #############################################################################################
+
+
+
+
+
+
