@@ -1,0 +1,44 @@
+
+#############################################################################################
+Download and instal WordPress onto server
+#############################################################################################
+
+#!/bin/bash
+
+# Download the latest WP-CLI PHAR file
+echo "Downloading WP-CLI..."
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+# Move the file to the system binary directory
+echo "Moving to /usr/local/bin/wp..."
+sudo mv wp-cli.phar /usr/local/bin/wp
+
+# Make the binary executable
+echo "Setting permissions..."
+sudo chmod +x /usr/local/bin/wp
+
+echo "WP-CLI installation complete. Run 'wp --info' to verify."
+
+
+
+
+#############################################################################################
+Essentials CLI Script
+#############################################################################################
+!/bin/bash
+
+# Install essential plugins
+PLUGINS=(
+  "advanced-custom-fields"
+  "elementor"
+  "wpforms-lite"
+  "rank-math"
+  "wp-super-cache"
+)
+
+for PLUGIN in "${PLUGINS[@]}"; do
+  wp plugin install "$PLUGIN" --activate --allow-root
+done
+
+echo "All essential plugins installed and activated!"
+#############################################################################################
